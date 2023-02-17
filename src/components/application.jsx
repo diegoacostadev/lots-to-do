@@ -3,11 +3,13 @@ import { initialFilters } from '../features/filters';
 import Filters from './filters';
 import Tasks from './tasks';
 import useFilters, { filterTasks } from '../lib/filter-tasks';
-import { useMemo } from 'react';
+import { useMemo, useTransition } from 'react';
 
 const Application = () => {
   const [tasks] = useTasks();
-  const [filters, setFilter] = useFilters(initialFilters);
+  const [filters, setFilters] = useFilters(initialFilters);
+  const [filterInputs, setFilterInputs] = useFilters(initialFilters);
+  const [isPending, startTransition] = useTransition();
 
   const visibleTasks = useMemo(
     () => filterTasks(tasks, filters),
@@ -16,12 +18,16 @@ const Application = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setFilter(name, value);
+    setFilterInputs(name, value);
+    startTransition(() => {
+      setFilters(name, value)
+    })
   };
 
   return (
     <main>
-      <Filters filters={filters} onChange={handleChange} />
+      <Filters filters={filterInputs} onChange={handleChange} />
+      {isPending && <p>Loading...</p>}
       <Tasks tasks={visibleTasks} />
     </main>
   );
